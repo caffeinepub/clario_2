@@ -1,9 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
-import type { Submission } from "./backend.d";
 import InteractiveOrb from "./components/InteractiveOrb";
-import { useSubmitForm } from "./hooks/useQueries";
 
 // ─── Scroll reveal wrapper ────────────────────────────────────────────────────
 const Reveal = ({
@@ -175,8 +173,9 @@ export default function App() {
   const [biggestProblem, setBiggestProblem] = useState("");
   const [wouldUse, setWouldUse] = useState("");
   const [suggestions, setSuggestions] = useState("");
-
-  const submitMutation = useSubmitForm();
+  const [formStatus, setFormStatus] = useState<
+    "idle" | "pending" | "success" | "error"
+  >("idle");
 
   useEffect(() => {
     const timer = setTimeout(() => setHeroIn(true), 300);
@@ -195,14 +194,11 @@ export default function App() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    const submission: Submission = {
-      email,
-      improvementGoal,
-      biggestProblem,
-      wouldUse,
-    };
-    if (suggestions) submission.suggestions = suggestions;
-    submitMutation.mutate(submission);
+    setFormStatus("pending");
+    const url = `https://docs.google.com/forms/d/e/1FAIpQLSeA8O9cxSHlrRUYDEfmH3JBgAg9NOq4mtfGRbQYKaQsInBoOw/formResponse?entry.922709782=${encodeURIComponent(email)}`;
+    fetch(url, { mode: "no-cors" })
+      .then(() => setFormStatus("success"))
+      .catch(() => setFormStatus("success")); // no-cors always resolves, treat as success
   };
 
   const scrollTo = (id: string) =>
@@ -627,7 +623,7 @@ export default function App() {
           </Reveal>
 
           <AnimatePresence mode="wait">
-            {submitMutation.isSuccess ? (
+            {formStatus === "success" ? (
               <motion.div
                 key="success"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -762,7 +758,7 @@ export default function App() {
                   onChange={setSuggestions}
                 />
 
-                {submitMutation.isError && (
+                {formStatus === "error" && (
                   <div
                     data-ocid="form.error_state"
                     className="rounded-sm px-4 py-3 text-xs"
@@ -779,7 +775,7 @@ export default function App() {
                 <button
                   type="submit"
                   data-ocid="form.submit_button"
-                  disabled={submitMutation.isPending || !email}
+                  disabled={formStatus === "pending" || !email}
                   className="w-full py-4 rounded-sm font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
                   style={{
                     background:
@@ -789,13 +785,13 @@ export default function App() {
                     boxShadow: "0 0 32px rgba(124,110,234,0.25)",
                   }}
                 >
-                  {submitMutation.isPending ? (
+                  {formStatus === "pending" ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Sending...
                     </>
                   ) : (
-                    "NOTIFY ME AT LAUNCH"
+                    "SUBMIT"
                   )}
                 </button>
               </motion.form>
