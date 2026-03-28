@@ -1,7 +1,9 @@
 import { Loader2 } from "lucide-react";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
+import AdminPage from "./components/AdminPage";
 import InteractiveOrb from "./components/InteractiveOrb";
+import { useActor } from "./hooks/useActor";
 
 // ─── Scroll reveal wrapper ────────────────────────────────────────────────────
 const Reveal = ({
@@ -29,80 +31,6 @@ const Reveal = ({
     </motion.div>
   );
 };
-
-// ─── Floating label input ─────────────────────────────────────────────────────
-const FloatingInput = ({
-  id,
-  label,
-  type = "text",
-  value,
-  onChange,
-  required,
-  "data-ocid": dataOcid,
-}: {
-  id: string;
-  label: string;
-  type?: string;
-  value: string;
-  onChange: (v: string) => void;
-  required?: boolean;
-  "data-ocid"?: string;
-}) => (
-  <div className="float-label-wrap">
-    <input
-      id={id}
-      type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder=" "
-      required={required}
-      data-ocid={dataOcid}
-      className="w-full rounded-sm text-headline px-4 pt-6 pb-2 text-sm focus:outline-none transition-all duration-200"
-      style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid #2e2e2e",
-        caretColor: "#9b90f0",
-        color: "#f5f5f5",
-      }}
-    />
-    <label htmlFor={id}>{label}</label>
-  </div>
-);
-
-const FloatingTextarea = ({
-  id,
-  label,
-  value,
-  onChange,
-  rows = 3,
-  "data-ocid": dataOcid,
-}: {
-  id: string;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  rows?: number;
-  "data-ocid"?: string;
-}) => (
-  <div className="float-label-wrap textarea-wrap">
-    <textarea
-      id={id}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder=" "
-      rows={rows}
-      data-ocid={dataOcid}
-      className="w-full rounded-sm text-headline px-4 pt-7 pb-3 text-sm focus:outline-none transition-all duration-200 resize-none"
-      style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid #2e2e2e",
-        caretColor: "#9b90f0",
-        color: "#f5f5f5",
-      }}
-    />
-    <label htmlFor={id}>{label}</label>
-  </div>
-);
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const approachCards = [
@@ -161,45 +89,297 @@ const navLinks = [
   { label: "Pathways", href: "#pathways" },
   { label: "About", href: "#about" },
   { label: "Journal", href: "#early-access" },
+  { label: "Suggestions", href: "#suggestions" },
 ];
+
+// ─── Early Access Form ────────────────────────────────────────────────────────
+function EarlyAccessForm() {
+  const { actor } = useActor();
+  const [submitted, setSubmitted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !actor) return;
+    setIsSubmitting(true);
+    setError("");
+    try {
+      await actor.submitSignup(email);
+      setSubmitted(true);
+    } catch (_err) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <motion.div
+        data-ocid="form.success_state"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-center py-10 px-6"
+      >
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+          style={{ background: "linear-gradient(135deg, #7c6eea, #9b90f0)" }}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-label="Success"
+          >
+            <title>Success</title>
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="#f5f5f5"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <p
+          className="font-display text-2xl mb-2"
+          style={{ color: "#f5f5f5", letterSpacing: "-0.01em" }}
+        >
+          You&apos;re on the list.
+        </p>
+        <p className="text-sm" style={{ color: "#a0a0a0" }}>
+          We&apos;ll be in touch.
+        </p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <form
+      data-ocid="form.panel"
+      onSubmit={handleSubmit}
+      className="px-6 py-8 sm:px-10 sm:py-10"
+    >
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input
+          data-ocid="form.input"
+          type="email"
+          required
+          placeholder="Enter your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="flex-1 px-5 py-3.5 rounded-full text-sm outline-none transition-all duration-200"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid #2e2e2e",
+            color: "#f5f5f5",
+            caretColor: "#9b90f0",
+          }}
+          onFocus={(e) => {
+            e.currentTarget.style.border = "1px solid #7c6eea";
+            e.currentTarget.style.boxShadow =
+              "0 0 0 3px rgba(124,110,234,0.12)";
+          }}
+          onBlur={(e) => {
+            e.currentTarget.style.border = "1px solid #2e2e2e";
+            e.currentTarget.style.boxShadow = "none";
+          }}
+        />
+        <button
+          type="submit"
+          data-ocid="form.submit_button"
+          disabled={isSubmitting || !actor}
+          className="px-8 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.04] whitespace-nowrap flex items-center gap-2 justify-center disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+          style={{
+            background: "linear-gradient(135deg, #7c6eea 0%, #9b90f0 100%)",
+            color: "#f5f5f5",
+            boxShadow: isSubmitting
+              ? "none"
+              : "0 0 24px rgba(124,110,234,0.28)",
+          }}
+        >
+          {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+          {isSubmitting ? "Submitting..." : "SUBMIT"}
+        </button>
+      </div>
+      {error && (
+        <p
+          data-ocid="form.error_state"
+          className="mt-3 text-center text-xs"
+          style={{ color: "#ef4444" }}
+        >
+          {error}
+        </p>
+      )}
+      <p className="mt-4 text-center text-xs" style={{ color: "#444444" }}>
+        No spam. Ever.
+      </p>
+    </form>
+  );
+}
+
+// ─── Suggestion Form ──────────────────────────────────────────────────────────
+function SuggestionForm() {
+  const { actor } = useActor();
+  const [submitted, setSubmitted] = useState(false);
+  const [text, setText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim() || !actor) return;
+    setIsSubmitting(true);
+    setError("");
+    try {
+      await (actor as any).submitSuggestion(text.trim());
+      setSubmitted(true);
+    } catch (_err) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <motion.div
+        data-ocid="suggestion.success_state"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="text-center py-10 px-6"
+      >
+        <div
+          className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5"
+          style={{ background: "linear-gradient(135deg, #c9a84c, #e8c97a)" }}
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-label="Success"
+          >
+            <title>Success</title>
+            <path
+              d="M5 13l4 4L19 7"
+              stroke="#0d0d0d"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </div>
+        <p
+          className="font-display text-2xl mb-2"
+          style={{ color: "#f5f5f5", letterSpacing: "-0.01em" }}
+        >
+          Thanks for your suggestion!
+        </p>
+        <p className="text-sm" style={{ color: "#a0a0a0" }}>
+          We read every single one.
+        </p>
+      </motion.div>
+    );
+  }
+
+  return (
+    <form
+      data-ocid="suggestion.panel"
+      onSubmit={handleSubmit}
+      className="px-6 py-8 sm:px-10 sm:py-10"
+    >
+      <textarea
+        data-ocid="suggestion.textarea"
+        required
+        rows={4}
+        placeholder="What features would you love to see in Clario? What problems should we solve first?"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="w-full px-5 py-4 rounded-2xl text-sm outline-none transition-all duration-200 resize-none mb-4"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid #2e2e2e",
+          color: "#f5f5f5",
+          caretColor: "#9b90f0",
+          lineHeight: 1.6,
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.border = "1px solid #7c6eea";
+          e.currentTarget.style.boxShadow = "0 0 0 3px rgba(124,110,234,0.12)";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.border = "1px solid #2e2e2e";
+          e.currentTarget.style.boxShadow = "none";
+        }}
+      />
+      <div className="flex items-center justify-between">
+        <p className="text-xs" style={{ color: "#444444" }}>
+          Anonymous & honest — say exactly what you think.
+        </p>
+        <button
+          type="submit"
+          data-ocid="suggestion.submit_button"
+          disabled={isSubmitting || !actor || !text.trim()}
+          className="px-8 py-3.5 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-[1.04] whitespace-nowrap flex items-center gap-2 justify-center disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+          style={{
+            background: "linear-gradient(135deg, #7c6eea 0%, #9b90f0 100%)",
+            color: "#f5f5f5",
+            boxShadow: isSubmitting
+              ? "none"
+              : "0 0 24px rgba(124,110,234,0.28)",
+          }}
+        >
+          {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+          {isSubmitting ? "Submitting..." : "SUBMIT"}
+        </button>
+      </div>
+      {error && (
+        <p
+          data-ocid="suggestion.error_state"
+          className="mt-3 text-center text-xs"
+          style={{ color: "#ef4444" }}
+        >
+          {error}
+        </p>
+      )}
+    </form>
+  );
+}
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [hash, setHash] = useState(window.location.hash);
   const [scrolled, setScrolled] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [heroIn, setHeroIn] = useState(false);
-  const [email, setEmail] = useState("");
-  const [improvementGoal, setImprovementGoal] = useState("");
-  const [biggestProblem, setBiggestProblem] = useState("");
-  const [wouldUse, setWouldUse] = useState("");
-  const [suggestions, setSuggestions] = useState("");
-  const [formStatus, setFormStatus] = useState<
-    "idle" | "pending" | "success" | "error"
-  >("idle");
 
   useEffect(() => {
     const timer = setTimeout(() => setHeroIn(true), 300);
     const onScroll = () => setScrolled(window.scrollY > 30);
     const onMouse = (e: MouseEvent) =>
       setCursorPos({ x: e.clientX, y: e.clientY });
+    const onHashChange = () => setHash(window.location.hash);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("mousemove", onMouse, { passive: true });
+    window.addEventListener("hashchange", onHashChange);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("mousemove", onMouse);
+      window.removeEventListener("hashchange", onHashChange);
     };
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setFormStatus("pending");
-    const url = `https://docs.google.com/forms/d/e/1FAIpQLSeA8O9cxSHlrRUYDEfmH3JBgAg9NOq4mtfGRbQYKaQsInBoOw/formResponse?entry.922709782=${encodeURIComponent(email)}`;
-    fetch(url, { mode: "no-cors" })
-      .then(() => setFormStatus("success"))
-      .catch(() => setFormStatus("success")); // no-cors always resolves, treat as success
-  };
+  // Route to admin page
+  if (hash === "#admin") {
+    return <AdminPage />;
+  }
 
   const scrollTo = (id: string) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -605,7 +785,7 @@ export default function App() {
 
       {/* ── Early Access Form ── */}
       <section id="early-access" className="py-28 px-8 md:px-14">
-        <div className="max-w-xl mx-auto">
+        <div className="max-w-2xl mx-auto">
           <Reveal className="text-center mb-12">
             <p className="section-label mb-4">We&apos;re Building This</p>
             <h2
@@ -622,181 +802,49 @@ export default function App() {
             </p>
           </Reveal>
 
-          <AnimatePresence mode="wait">
-            {formStatus === "success" ? (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                data-ocid="form.success_state"
-                className="rounded-sm p-12 text-center card-dark"
-                style={{ boxShadow: "0 0 80px rgba(124,110,234,0.1)" }}
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 180 }}
-                  className="w-16 h-16 rounded-full mx-auto mb-6 flex items-center justify-center"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(124,110,234,0.18) 0%, transparent 70%)",
-                    border: "1px solid rgba(124,110,234,0.4)",
-                    boxShadow: "0 0 40px rgba(124,110,234,0.2)",
-                  }}
-                >
-                  <svg
-                    width="28"
-                    height="28"
-                    viewBox="0 0 28 28"
-                    fill="none"
-                    role="img"
-                    aria-label="Success"
-                  >
-                    <motion.path
-                      d="M6 14 L11.5 19.5 L22 8"
-                      stroke="#9b90f0"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      fill="none"
-                      initial={{ pathLength: 0 }}
-                      animate={{ pathLength: 1 }}
-                      transition={{
-                        delay: 0.4,
-                        duration: 0.6,
-                        ease: "easeInOut",
-                      }}
-                    />
-                  </svg>
-                </motion.div>
-                <h3
-                  className="font-display text-2xl mb-3"
-                  style={{ color: "#f5f5f5" }}
-                >
-                  You&apos;re In.
-                </h3>
-                <p className="text-sm" style={{ color: "#666666" }}>
-                  We&apos;ll build Clario with you. Watch your inbox.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.form
-                key="form"
-                onSubmit={handleSubmit}
-                data-ocid="form.panel"
-                className="rounded-sm p-8 md:p-10 flex flex-col gap-5 card-dark"
-              >
-                <FloatingInput
-                  id="email"
-                  label="Email address *"
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  required
-                  data-ocid="form.input"
-                />
+          <Reveal>
+            <div
+              className="card-dark rounded-sm overflow-hidden mx-auto"
+              style={{ maxWidth: 600 }}
+            >
+              <EarlyAccessForm />
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
-                <FloatingTextarea
-                  id="improvement"
-                  label="What do you want to improve?"
-                  value={improvementGoal}
-                  onChange={setImprovementGoal}
-                  data-ocid="form.textarea"
-                />
+      {/* Divider */}
+      <div className="max-w-6xl mx-auto px-8 md:px-14">
+        <div className="divider" />
+      </div>
 
-                <FloatingTextarea
-                  id="problem"
-                  label="Biggest challenge right now?"
-                  value={biggestProblem}
-                  onChange={setBiggestProblem}
-                />
+      {/* ── Suggestions ── */}
+      <section id="suggestions" className="py-28 px-8 md:px-14">
+        <div className="max-w-2xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <p className="section-label mb-4">Your Voice Matters</p>
+            <h2
+              className="font-display text-4xl md:text-5xl mb-5"
+              style={{ color: "#f5f5f5", letterSpacing: "-0.02em" }}
+            >
+              Share Your
+              <br />
+              <span className="text-gold">Thoughts</span>
+            </h2>
+            <p className="text-sm leading-relaxed" style={{ color: "#666666" }}>
+              Tell us what features matter most to you. Every suggestion shapes
+              what Clario becomes.
+            </p>
+          </Reveal>
 
-                {/* Would use toggle */}
-                <div>
-                  <p
-                    className="text-xs mb-3 tracking-wide uppercase font-medium"
-                    style={{
-                      color: "#666666",
-                      fontSize: "10px",
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    Would you use Clario?
-                  </p>
-                  <div className="flex gap-3">
-                    {["Yes", "No", "Maybe"].map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        data-ocid="form.toggle"
-                        onClick={() => setWouldUse(opt)}
-                        className="flex-1 py-2.5 rounded-sm text-sm font-medium transition-all duration-200"
-                        style={{
-                          background:
-                            wouldUse === opt
-                              ? "rgba(124,110,234,0.12)"
-                              : "rgba(255,255,255,0.02)",
-                          border: `1px solid ${
-                            wouldUse === opt
-                              ? "rgba(124,110,234,0.5)"
-                              : "#2e2e2e"
-                          }`,
-                          color: wouldUse === opt ? "#9b90f0" : "#666666",
-                        }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <FloatingTextarea
-                  id="suggestions"
-                  label="Suggestions (optional)"
-                  value={suggestions}
-                  onChange={setSuggestions}
-                />
-
-                {formStatus === "error" && (
-                  <div
-                    data-ocid="form.error_state"
-                    className="rounded-sm px-4 py-3 text-xs"
-                    style={{
-                      background: "rgba(239,68,68,0.06)",
-                      border: "1px solid rgba(239,68,68,0.2)",
-                      color: "#fca5a5",
-                    }}
-                  >
-                    Something went wrong. Please try again.
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  data-ocid="form.submit_button"
-                  disabled={formStatus === "pending" || !email}
-                  className="w-full py-4 rounded-sm font-semibold text-sm transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.02] active:scale-[0.98]"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #7c6eea 0%, #9b90f0 100%)",
-                    color: "#f5f5f5",
-                    letterSpacing: "0.05em",
-                    boxShadow: "0 0 32px rgba(124,110,234,0.25)",
-                  }}
-                >
-                  {formStatus === "pending" ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Sending...
-                    </>
-                  ) : (
-                    "SUBMIT"
-                  )}
-                </button>
-              </motion.form>
-            )}
-          </AnimatePresence>
+          <Reveal>
+            <div
+              className="card-dark rounded-sm overflow-hidden mx-auto"
+              style={{ maxWidth: 600 }}
+            >
+              <SuggestionForm />
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -846,9 +894,28 @@ export default function App() {
           </div>
 
           {/* Right */}
-          <span className="text-xs" style={{ color: "#2e2e2e" }}>
-            © {new Date().getFullYear()} Clario. All rights reserved.
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-xs" style={{ color: "#2e2e2e" }}>
+              © {new Date().getFullYear()} Clario. All rights reserved.
+            </span>
+            {/* Hidden admin link */}
+            <button
+              type="button"
+              data-ocid="footer.link"
+              onClick={() => {
+                window.location.hash = "admin";
+              }}
+              className="text-xs cursor-pointer"
+              style={{
+                color: "#2e2e2e",
+                background: "none",
+                border: "none",
+                padding: 0,
+              }}
+            >
+              Admin
+            </button>
+          </div>
         </div>
       </footer>
     </div>

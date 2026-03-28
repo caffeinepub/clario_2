@@ -7,34 +7,52 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface TransformationInput {
-    context: Uint8Array;
-    response: http_request_result;
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
 }
 export interface TransformationOutput {
     status: bigint;
     body: Uint8Array;
     headers: Array<http_header>;
 }
-export interface Submission {
-    suggestions?: string;
-    improvementGoal: string;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
+export interface Signup {
     email: string;
-    biggestProblem: string;
-    wouldUse: string;
+    timestamp: bigint;
+}
+export interface Suggestion {
+    text: string;
+    timestamp: bigint;
+}
+export interface UserProfile {
+    name: string;
 }
 export interface http_header {
     value: string;
     name: string;
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
 }
 export interface backendInterface {
-    clearSubmissions(): Promise<string>;
-    getAllSubmissions(): Promise<Array<Submission>>;
-    submitForm(submission: Submission): Promise<string>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    clearSignups(): Promise<string>;
+    clearSuggestions(): Promise<string>;
+    getAllSignups(): Promise<Array<Signup>>;
+    getAllSuggestions(): Promise<Array<Suggestion>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    submitSignup(email: string): Promise<string>;
+    submitSuggestion(text: string): Promise<string>;
     transform(input: TransformationInput): Promise<TransformationOutput>;
 }

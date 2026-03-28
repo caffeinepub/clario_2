@@ -1,80 +1,92 @@
 import List "mo:core/List";
+import Map "mo:core/Map";
 import Text "mo:core/Text";
-import OutCall "http-outcalls/outcall";
-import Iter "mo:core/Iter";
+import Time "mo:core/Time";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
+
+import MixinAuthorization "authorization/MixinAuthorization";
+import AccessControl "authorization/access-control";
+
 
 actor {
-  type Submission = {
+  type Signup = {
     email : Text;
-    improvementGoal : Text;
-    biggestProblem : Text;
-    wouldUse : Text; // "Yes" | "No" | "Maybe"
-    suggestions : ?Text;
+    timestamp : Int;
   };
 
-  // List to store submissions (persistent)
-  let submissions = List.empty<Submission>();
-
-  // Needed for HTTP outcall transform
-  public query func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
+  type Suggestion = {
+    text : Text;
+    timestamp : Int;
   };
 
-  // Add a new submission and send to Brevo
-  public shared ({ caller }) func submitForm(submission : Submission) : async Text {
-    if (submission.email.size() == 0) {
+  public type UserProfile = {
+    name : Text;
+  };
+
+  let signups = List.empty<Signup>();
+  let suggestions = List.empty<Suggestion>();
+  let accessControlState = AccessControl.initState();
+  let userProfiles = Map.empty<Principal, UserProfile>();
+
+  // Pre-seed owner as admin
+  let ownerPrincipal = Principal.fromText("mbolt-rwfea-7bdvh-f5xmv-76ilq-s46ua-qst5p-bcfwv-tc63o-4uynt-tqe");
+  accessControlState.userRoles.add(ownerPrincipal, #admin);
+  accessControlState.adminAssigned := true;
+
+  include MixinAuthorization(accessControlState);
+
+  public shared func submitSignup(email : Text) : async Text {
+    if (email.size() == 0) {
       return "Error: Email is required";
     };
-
-    submissions.add(submission);
-
-    // Prepare Brevo payload with both contact & deal info
-    let suggestionsText = switch (submission.suggestions) {
-      case (null) { "" };
-      case (?s) { s };
+    let newSignup : Signup = {
+      email;
+      timestamp = Time.now();
     };
-
-    let brevoPayload = "{
-      \"email\": \"" # submission.email # "\",
-      \"attributes\": {
-        \"IMPROVEMENT_GOAL\": \"" # submission.improvementGoal # "\",
-        \"BIGGEST_PROBLEM\": \"" # submission.biggestProblem # "\",
-        \"WOULD_USE\": \"" # submission.wouldUse # "\",
-        \"SUGGESTIONS\": \"" # suggestionsText # "\"
-      },
-      \"updateEnabled\": true
-    }";
-
-    try {
-      let apiKey = "<YOUR_BREVO_API_KEY>"; // TODO: Store securely
-      let headers = [
-        {
-          name = "api-key";
-          value = apiKey;
-        },
-        {
-          name = "Content-Type";
-          value = "application/json";
-        },
-      ];
-
-      let _brevoResponse = await OutCall.httpPostRequest(
-        "https://api.brevo.com/v3/contacts",
-        headers,
-        brevoPayload,
-        transform,
-      );
-      "Success";
-    } catch (e) { "Error submitting to Brevo: " # e.message() };
+    signups.add(newSignup);
+    "Success";
   };
 
-  // Get all submissions (for admin review)
-  public shared ({ caller }) func getAllSubmissions() : async [Submission] {
-    submissions.values().toArray();
+  public shared ({ caller }) func getAllSignups() : async [Signup] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view signups");
+    };
+    signups.values().toArray();
   };
 
-  public shared ({ caller }) func clearSubmissions() : async Text {
-    submissions.clear();
-    "Submissions cleared";
+  public shared ({ caller }) func clearSignups() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can clear signups");
+    };
+    signups.clear();
+    "Signups cleared";
+  };
+
+  public shared func submitSuggestion(text : Text) : async Text {
+    if (text.size() == 0) {
+      return "Error: Suggestion text is required";
+    };
+    let newSuggestion : Suggestion = {
+      text;
+      timestamp = Time.now();
+    };
+    suggestions.add(newSuggestion);
+    "Success";
+  };
+
+  public shared ({ caller }) func getAllSuggestions() : async [Suggestion] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view suggestions");
+    };
+    suggestions.values().toArray();
+  };
+
+  public shared ({ caller }) func clearSuggestions() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can clear suggestions");
+    };
+    suggestions.clear();
+    "Suggestions cleared";
   };
 };
