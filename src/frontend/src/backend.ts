@@ -89,20 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
-export interface TransformationOutput {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
-export interface TransformationInput {
-    context: Uint8Array;
-    response: http_request_result;
-}
 export interface Signup {
     email: string;
     timestamp: bigint;
@@ -110,9 +96,9 @@ export interface Signup {
 export interface UserProfile {
     name: string;
 }
-export interface http_header {
-    value: string;
-    name: string;
+export interface Suggestion {
+    text: string;
+    timestamp: bigint;
 }
 export enum UserRole {
     admin = "admin",
@@ -123,14 +109,16 @@ export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     clearSignups(): Promise<string>;
+    clearSuggestions(): Promise<string>;
     getAllSignups(): Promise<Array<Signup>>;
+    getAllSuggestions(): Promise<Array<Suggestion>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     submitSignup(email: string): Promise<string>;
-    transform(input: TransformationInput): Promise<TransformationOutput>;
+    submitSuggestion(text: string): Promise<string>;
 }
 import type { UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -177,6 +165,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async clearSuggestions(): Promise<string> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.clearSuggestions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.clearSuggestions();
+            return result;
+        }
+    }
     async getAllSignups(): Promise<Array<Signup>> {
         if (this.processError) {
             try {
@@ -188,6 +190,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllSignups();
+            return result;
+        }
+    }
+    async getAllSuggestions(): Promise<Array<Suggestion>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllSuggestions();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllSuggestions();
             return result;
         }
     }
@@ -275,17 +291,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
+    async submitSuggestion(arg0: string): Promise<string> {
         if (this.processError) {
             try {
-                const result = await this.actor.transform(arg0);
+                const result = await this.actor.submitSuggestion(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.transform(arg0);
+            const result = await this.actor.submitSuggestion(arg0);
             return result;
         }
     }

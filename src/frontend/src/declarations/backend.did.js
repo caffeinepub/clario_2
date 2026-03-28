@@ -14,31 +14,19 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const Signup = IDL.Record({ 'email' : IDL.Text, 'timestamp' : IDL.Int });
+export const Suggestion = IDL.Record({
+  'text' : IDL.Text,
+  'timestamp' : IDL.Int,
+});
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
-export const http_header = IDL.Record({
-  'value' : IDL.Text,
-  'name' : IDL.Text,
-});
-export const http_request_result = IDL.Record({
-  'status' : IDL.Nat,
-  'body' : IDL.Vec(IDL.Nat8),
-  'headers' : IDL.Vec(http_header),
-});
-export const TransformationInput = IDL.Record({
-  'context' : IDL.Vec(IDL.Nat8),
-  'response' : http_request_result,
-});
-export const TransformationOutput = IDL.Record({
-  'status' : IDL.Nat,
-  'body' : IDL.Vec(IDL.Nat8),
-  'headers' : IDL.Vec(http_header),
-});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'clearSignups' : IDL.Func([], [IDL.Text], []),
-  'getAllSignups' : IDL.Func([], [IDL.Vec(Signup)], []),
+  'clearSuggestions' : IDL.Func([], [IDL.Text], []),
+  'getAllSignups' : IDL.Func([], [IDL.Vec(Signup)], ['query']),
+  'getAllSuggestions' : IDL.Func([], [IDL.Vec(Suggestion)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getUserProfile' : IDL.Func(
@@ -49,11 +37,7 @@ export const idlService = IDL.Service({
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'submitSignup' : IDL.Func([IDL.Text], [IDL.Text], []),
-  'transform' : IDL.Func(
-      [TransformationInput],
-      [TransformationOutput],
-      ['query'],
-    ),
+  'submitSuggestion' : IDL.Func([IDL.Text], [IDL.Text], []),
 });
 
 export const idlInitArgs = [];
@@ -65,28 +49,16 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const Signup = IDL.Record({ 'email' : IDL.Text, 'timestamp' : IDL.Int });
+  const Suggestion = IDL.Record({ 'text' : IDL.Text, 'timestamp' : IDL.Int });
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
-  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
-  const http_request_result = IDL.Record({
-    'status' : IDL.Nat,
-    'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(http_header),
-  });
-  const TransformationInput = IDL.Record({
-    'context' : IDL.Vec(IDL.Nat8),
-    'response' : http_request_result,
-  });
-  const TransformationOutput = IDL.Record({
-    'status' : IDL.Nat,
-    'body' : IDL.Vec(IDL.Nat8),
-    'headers' : IDL.Vec(http_header),
-  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'clearSignups' : IDL.Func([], [IDL.Text], []),
-    'getAllSignups' : IDL.Func([], [IDL.Vec(Signup)], []),
+    'clearSuggestions' : IDL.Func([], [IDL.Text], []),
+    'getAllSignups' : IDL.Func([], [IDL.Vec(Signup)], ['query']),
+    'getAllSuggestions' : IDL.Func([], [IDL.Vec(Suggestion)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getUserProfile' : IDL.Func(
@@ -97,11 +69,7 @@ export const idlFactory = ({ IDL }) => {
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'submitSignup' : IDL.Func([IDL.Text], [IDL.Text], []),
-    'transform' : IDL.Func(
-        [TransformationInput],
-        [TransformationOutput],
-        ['query'],
-      ),
+    'submitSuggestion' : IDL.Func([IDL.Text], [IDL.Text], []),
   });
 };
 

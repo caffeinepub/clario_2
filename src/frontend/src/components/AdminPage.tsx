@@ -78,7 +78,7 @@ export default function AdminPage() {
     queryKey: ["suggestions"],
     queryFn: async () => {
       if (!actor) return [];
-      return (actor as any).getAllSuggestions();
+      return actor.getAllSuggestions();
     },
     enabled: !!actor && !actorLoading && isAdmin === true,
   });
@@ -96,7 +96,7 @@ export default function AdminPage() {
   const clearSuggestionsMutation = useMutation({
     mutationFn: async () => {
       if (!actor) throw new Error("No actor");
-      return (actor as any).clearSuggestions();
+      return actor.clearSuggestions();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suggestions"] });

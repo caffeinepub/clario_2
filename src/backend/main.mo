@@ -4,11 +4,13 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
+// Apply migration with-clause
+(with migration = Migration.run)
 actor {
   type Signup = {
     email : Text;
@@ -36,6 +38,29 @@ actor {
 
   include MixinAuthorization(accessControlState);
 
+  // User Profile Management Functions
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can access profiles");
+    };
+    userProfiles.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userProfiles.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
+  // Email Signup Functions
   public shared func submitSignup(email : Text) : async Text {
     if (email.size() == 0) {
       return "Error: Email is required";
@@ -48,11 +73,11 @@ actor {
     "Success";
   };
 
-  public shared ({ caller }) func getAllSignups() : async [Signup] {
+  public query ({ caller }) func getAllSignups() : async [Signup] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view signups");
     };
-    signups.values().toArray();
+    signups.toArray();
   };
 
   public shared ({ caller }) func clearSignups() : async Text {
@@ -63,6 +88,7 @@ actor {
     "Signups cleared";
   };
 
+  // Suggestion Functions
   public shared func submitSuggestion(text : Text) : async Text {
     if (text.size() == 0) {
       return "Error: Suggestion text is required";
@@ -75,11 +101,11 @@ actor {
     "Success";
   };
 
-  public shared ({ caller }) func getAllSuggestions() : async [Suggestion] {
+  public query ({ caller }) func getAllSuggestions() : async [Suggestion] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can view suggestions");
     };
-    suggestions.values().toArray();
+    suggestions.toArray();
   };
 
   public shared ({ caller }) func clearSuggestions() : async Text {

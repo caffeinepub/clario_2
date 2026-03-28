@@ -236,7 +236,7 @@ function SuggestionForm() {
     setIsSubmitting(true);
     setError("");
     try {
-      await (actor as any).submitSuggestion(text.trim());
+      await actor.submitSuggestion(text.trim());
       setSubmitted(true);
     } catch (_err) {
       setError("Something went wrong. Please try again.");

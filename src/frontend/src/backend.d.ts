@@ -7,34 +7,16 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
-export interface TransformationOutput {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
-export interface TransformationInput {
-    context: Uint8Array;
-    response: http_request_result;
-}
 export interface Signup {
     email: string;
-    timestamp: bigint;
-}
-export interface Suggestion {
-    text: string;
     timestamp: bigint;
 }
 export interface UserProfile {
     name: string;
 }
-export interface http_header {
-    value: string;
-    name: string;
+export interface Suggestion {
+    text: string;
+    timestamp: bigint;
 }
 export enum UserRole {
     admin = "admin",
@@ -54,5 +36,4 @@ export interface backendInterface {
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     submitSignup(email: string): Promise<string>;
     submitSuggestion(text: string): Promise<string>;
-    transform(input: TransformationInput): Promise<TransformationOutput>;
 }
