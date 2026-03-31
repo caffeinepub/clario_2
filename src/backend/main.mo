@@ -4,13 +4,13 @@ import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 // Apply migration with-clause
-(with migration = Migration.run)
+
 actor {
   type Signup = {
     email : Text;
@@ -35,6 +35,8 @@ actor {
   let ownerPrincipal = Principal.fromText("mbolt-rwfea-7bdvh-f5xmv-76ilq-s46ua-qst5p-bcfwv-tc63o-4uynt-tqe");
   accessControlState.userRoles.add(ownerPrincipal, #admin);
   accessControlState.adminAssigned := true;
+  let secondAdminPrincipal = Principal.fromText("3fthk-6gg5x-7dxhw-xquwh-6gwyh-hjnou-ekcu2-kaebz-3r4ur-qwrw3-pae");
+  accessControlState.userRoles.add(secondAdminPrincipal, #admin);
 
   include MixinAuthorization(accessControlState);
 

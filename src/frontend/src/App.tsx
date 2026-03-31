@@ -413,26 +413,12 @@ export default function App() {
       >
         <div className="max-w-6xl mx-auto px-8 md:px-14 flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{
-                background: "linear-gradient(135deg, #7c6eea, #9b90f0)",
-                color: "#f5f5f5",
-                fontFamily: '"Playfair Display", serif',
-              }}
-            >
-              C
-            </div>
-            <span
-              className="text-lg font-semibold tracking-tight"
-              style={{
-                color: "#f5f5f5",
-                fontFamily: '"Playfair Display", serif',
-              }}
-            >
-              Clario
-            </span>
+          <div className="flex items-center">
+            <img
+              src="/assets/img_20260328_211137-019d351b-f278-7689-8534-f39f8decdcbf.png"
+              alt="Clario"
+              className="h-10 w-auto object-contain"
+            />
           </div>
 
           {/* Nav links — desktop */}
@@ -852,26 +838,12 @@ export default function App() {
       <footer style={{ borderTop: "1px solid #242424" }}>
         <div className="max-w-6xl mx-auto px-8 md:px-14 py-10 flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{
-                background: "linear-gradient(135deg, #7c6eea, #9b90f0)",
-                color: "#f5f5f5",
-                fontFamily: '"Playfair Display", serif',
-              }}
-            >
-              C
-            </div>
-            <span
-              className="text-base font-semibold"
-              style={{
-                color: "#f5f5f5",
-                fontFamily: '"Playfair Display", serif',
-              }}
-            >
-              Clario
-            </span>
+          <div className="flex items-center">
+            <img
+              src="/assets/img_20260328_211137-019d351b-f278-7689-8534-f39f8decdcbf.png"
+              alt="Clario"
+              className="h-8 w-auto object-contain"
+            />
           </div>
 
           {/* Links */}
