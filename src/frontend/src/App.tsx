@@ -870,23 +870,6 @@ export default function App() {
             <span className="text-xs" style={{ color: "#2e2e2e" }}>
               © {new Date().getFullYear()} Clario. All rights reserved.
             </span>
-            {/* Hidden admin link */}
-            <button
-              type="button"
-              data-ocid="footer.link"
-              onClick={() => {
-                window.location.hash = "admin";
-              }}
-              className="text-xs cursor-pointer"
-              style={{
-                color: "#2e2e2e",
-                background: "none",
-                border: "none",
-                padding: 0,
-              }}
-            >
-              Admin
-            </button>
           </div>
         </div>
       </footer>
